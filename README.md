@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Notification Scheduler App
 
 A React Native + Expo app that demonstrates scheduling local foreground notifications using expo-notifications.
@@ -139,3 +140,6 @@ NotificationScheduler/
 ## License
 
 This project is created for demonstration purposes.
+=======
+# Findr
+>>>>>>> c0664bc747bfaf2cd492b7977871b7920be3b9ba
