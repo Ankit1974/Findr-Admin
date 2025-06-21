@@ -1,97 +1,141 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Notification Scheduler App
 
-# Getting Started
+A React Native + Expo app that demonstrates scheduling local foreground notifications using expo-notifications.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+## Features
 
-## Step 1: Start Metro
+- ✅ Request notification permissions on app load
+- ✅ Schedule local notifications 1-2 minutes in the future
+- ✅ Show notifications even when app is in foreground
+- ✅ Handle permission denial gracefully
+- ✅ Clean, modern UI with status indicators
+- ✅ Android-specific notification channel configuration
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## Requirements
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+- Node.js (v16 or higher)
+- npm or yarn
+- Expo CLI
+- Android device or emulator for testing
+- Expo Go app (optional, for development)
 
-```sh
-# Using npm
-npm start
+## Installation
 
-# OR using Yarn
-yarn start
+1. **Clone or navigate to the project directory:**
+   ```bash
+   cd NotificationScheduler
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Install Expo CLI globally (if not already installed):**
+   ```bash
+   npm install -g @expo/cli
+   ```
+
+## Running the App
+
+### For Android Development
+
+1. **Start the development server:**
+   ```bash
+   npm run android
+   ```
+
+2. **Or use Expo CLI:**
+   ```bash
+   npx expo start
+   ```
+
+3. **Then press 'a' to open on Android device/emulator**
+
+### Using Expo Go (Alternative)
+
+1. **Start the development server:**
+   ```bash
+   npx expo start
+   ```
+
+2. **Scan the QR code with Expo Go app on your Android device**
+
+## How to Test
+
+1. **Launch the app** - it will automatically request notification permissions
+2. **Grant permissions** when prompted
+3. **Tap "Schedule Notification"** button
+4. **Wait 1.5 minutes** - the notification will appear even if the app is in the foreground
+5. **Check the status indicator** to see if permissions are granted
+
+## Project Structure
+
+```
+NotificationScheduler/
+├── App.tsx                 # Main app component with notification logic
+├── app.json               # Expo configuration
+├── package.json           # Dependencies and scripts
+├── tsconfig.json          # TypeScript configuration
+└── assets/                # App icons and splash screen
 ```
 
-## Step 2: Build and run your app
+## Key Dependencies
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+- `expo-notifications`: For handling local notifications
+- `expo-device`: For device detection and permissions
+- `expo-constants`: For Expo configuration
+- `@notifee/react-native`: For advanced notification features (installed but not used in this simple implementation)
 
-### Android
+## Technical Implementation
 
-```sh
-# Using npm
-npm run android
+### Notification Configuration
+- Uses `expo-notifications` for local notification scheduling
+- Configures Android notification channel with high importance
+- Sets up notification handler to show alerts even in foreground
 
-# OR using Yarn
-yarn android
-```
+### Permission Handling
+- Requests notification permissions on app load
+- Shows appropriate error messages if permissions are denied
+- Disables the schedule button if permissions are not granted
 
-### iOS
+### UI Features
+- Real-time permission status indicator
+- Disabled button state when permissions are denied
+- Shows last received notification details
+- Modern, clean design with shadows and proper spacing
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
+## Troubleshooting
 
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
+### Common Issues
 
-```sh
-bundle install
-```
+1. **"Must use physical device for Push Notifications"**
+   - Use a physical Android device instead of an emulator
+   - Or use Expo Go app for testing
 
-Then, and every time you update your native dependencies, run:
+2. **Notifications not appearing**
+   - Check that notification permissions are granted
+   - Ensure the app is not in battery optimization mode
+   - Verify notification settings in Android system settings
 
-```sh
-bundle exec pod install
-```
+3. **Build errors**
+   - Clear cache: `npx expo start --clear`
+   - Reinstall dependencies: `rm -rf node_modules && npm install`
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+### Android-Specific Notes
 
-```sh
-# Using npm
-npm run ios
+- The app configures a notification channel for Android
+- Notifications will appear with vibration and sound
+- Works with Android 8.0 (API level 26) and higher
 
-# OR using Yarn
-yarn ios
-```
+## Bonus Features (Future Enhancements)
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+- [ ] DateTimePicker for custom notification timing
+- [ ] Multiple notification scheduling
+- [ ] Notification history
+- [ ] Custom notification sounds
+- [ ] Background notification handling
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+## License
 
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+This project is created for demonstration purposes.

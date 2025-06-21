@@ -1,131 +1,260 @@
-/**
- * Sample React Native App
- * https://github.com/facebook/react-native
- *
- * @format
- */
-
-import React from 'react';
-import type {PropsWithChildren} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  ScrollView,
-  StatusBar,
   StyleSheet,
   Text,
-  useColorScheme,
   View,
+  TouchableOpacity,
+  Alert,
+  Platform,
+  SafeAreaView,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
+// Configure notification behavior
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
 
-type SectionProps = PropsWithChildren<{
-  title: string;
-}>;
+export default function App() {
+  const [expoPushToken, setExpoPushToken] = useState<string | undefined>('');
+  const [notification, setNotification] = useState<Notifications.Notification | null>(null);
+  const [permissionGranted, setPermissionGranted] = useState(false);
 
-function Section({children, title}: SectionProps): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-}
+  useEffect(() => {
+    // Request notification permissions on app load
+    registerForPushNotificationsAsync().then(token => {
+      setExpoPushToken(token);
+    });
 
-function App(): React.JSX.Element {
-  const isDarkMode = useColorScheme() === 'dark';
+    // Listen for notifications
+    const notificationListener = Notifications.addNotificationReceivedListener((notification: Notifications.Notification) => {
+      setNotification(notification);
+    });
 
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
+    const responseListener = Notifications.addNotificationResponseReceivedListener((response: Notifications.NotificationResponse) => {
+      console.log(response);
+    });
+
+    return () => {
+      Notifications.removeNotificationSubscription(notificationListener);
+      Notifications.removeNotificationSubscription(responseListener);
+    };
+  }, []);
+
+  const registerForPushNotificationsAsync = async () => {
+    let token;
+
+    if (Platform.OS === 'android') {
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
+    }
+
+    if (Device.isDevice) {
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
+      
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+      
+      if (finalStatus !== 'granted') {
+        Alert.alert(
+          'Permission Required',
+          'Please enable notification permissions to schedule notifications.',
+          [{ text: 'OK' }]
+        );
+        setPermissionGranted(false);
+        return;
+      }
+      
+      setPermissionGranted(true);
+      token = (await Notifications.getExpoPushTokenAsync({
+        projectId: 'your-project-id', // You can leave this as is for local notifications
+      })).data;
+    } else {
+      Alert.alert('Must use physical device for Push Notifications');
+    }
+
+    return token;
   };
 
-  /*
-   * To keep the template simple and small we're adding padding to prevent view
-   * from rendering under the System UI.
-   * For bigger apps the recommendation is to use `react-native-safe-area-context`:
-   * https://github.com/AppAndFlow/react-native-safe-area-context
-   *
-   * You can read more about it here:
-   * https://github.com/react-native-community/discussions-and-proposals/discussions/827
-   */
-  const safePadding = '5%';
+  const scheduleNotification = async () => {
+    if (!permissionGranted) {
+      Alert.alert(
+        'Permission Denied',
+        'Notification permission is required to schedule notifications.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+
+    // Schedule notification for 1-2 minutes in the future
+    const trigger = new Date(Date.now() + 1.5 * 60 * 1000); // 1.5 minutes from now
+
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Scheduled Notification",
+        body: "This is your scheduled notification! The app was in the foreground when this was triggered.",
+        data: { data: 'goes here' },
+      },
+      trigger: {
+        date: trigger,
+      },
+    });
+
+    Alert.alert(
+      'Notification Scheduled',
+      `Notification will appear at ${trigger.toLocaleTimeString()}`,
+      [{ text: 'OK' }]
+    );
+  };
 
   return (
-    <View style={backgroundStyle}>
-      <StatusBar
-        barStyle={isDarkMode ? 'light-content' : 'dark-content'}
-        backgroundColor={backgroundStyle.backgroundColor}
-      />
-      <ScrollView
-        style={backgroundStyle}>
-        <View style={{paddingRight: safePadding}}>
-          <Header/>
+    <SafeAreaView style={styles.container}>
+      <StatusBar style="auto" />
+      
+      <View style={styles.content}>
+        <Text style={styles.title}>Notification Scheduler</Text>
+        
+        <View style={styles.statusContainer}>
+          <Text style={styles.statusLabel}>Permission Status:</Text>
+          <Text style={[
+            styles.statusText,
+            { color: permissionGranted ? '#4CAF50' : '#F44336' }
+          ]}>
+            {permissionGranted ? 'Granted' : 'Denied'}
+          </Text>
         </View>
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-            paddingHorizontal: safePadding,
-            paddingBottom: safePadding,
-          }}>
-          <Section title="Step One">
-            Edit <Text style={styles.highlight}>App.tsx</Text> to change this
-            screen and then come back to see your edits.
-          </Section>
-          <Section title="See Your Changes">
-            <ReloadInstructions />
-          </Section>
-          <Section title="Debug">
-            <DebugInstructions />
-          </Section>
-          <Section title="Learn More">
-            Read the docs to discover what to do next:
-          </Section>
-          <LearnMoreLinks />
-        </View>
-      </ScrollView>
-    </View>
+
+        <TouchableOpacity
+          style={[
+            styles.button,
+            !permissionGranted && styles.buttonDisabled
+          ]}
+          onPress={scheduleNotification}
+          disabled={!permissionGranted}
+        >
+          <Text style={styles.buttonText}>Schedule Notification</Text>
+        </TouchableOpacity>
+
+        {notification && (
+          <View style={styles.notificationContainer}>
+            <Text style={styles.notificationTitle}>Last Notification:</Text>
+            <Text style={styles.notificationText}>
+              {notification.request.content.title}
+            </Text>
+            <Text style={styles.notificationText}>
+              {notification.request.content.body}
+            </Text>
+          </View>
+        )}
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  content: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
   },
-  sectionDescription: {
-    marginTop: 8,
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 40,
+    textAlign: 'center',
+  },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 40,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  statusLabel: {
+    fontSize: 16,
+    color: '#666',
+    marginRight: 10,
+  },
+  statusText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  button: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 25,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  buttonDisabled: {
+    backgroundColor: '#ccc',
+  },
+  buttonText: {
+    color: '#fff',
     fontSize: 18,
-    fontWeight: '400',
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
-  highlight: {
-    fontWeight: '700',
+  notificationContainer: {
+    marginTop: 40,
+    padding: 20,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+    minWidth: 300,
+  },
+  notificationTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 10,
+  },
+  notificationText: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 5,
   },
 });
-
-export default App;
